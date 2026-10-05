@@ -15,6 +15,7 @@ dependencies {
   api("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.8.0")
   api("com.google.guava:guava:33.4.0-jre")
   implementation("com.squareup.retrofit2:retrofit:2.11.0")
+  testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
   testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
   testImplementation("com.google.truth:truth:1.4.4")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
@@ -35,3 +36,11 @@ publishing {
   }
 }
 
+
+// Uses only a loopback HTTP fixture and dummy credentials.
+tasks.register<JavaExec>("benchmarkClosedStorageRetention") {
+  dependsOn(tasks.testClasses)
+  classpath = sourceSets.test.get().runtimeClasspath
+  mainClass.set("com.github.demidko.telegram.ClosedStorageRetentionBenchmark")
+  args(providers.gradleProperty("entries").getOrElse("10000"), providers.gradleProperty("cycles").getOrElse("5"))
+}
