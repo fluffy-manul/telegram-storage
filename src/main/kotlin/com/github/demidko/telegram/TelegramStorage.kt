@@ -74,9 +74,7 @@ class TelegramStorage<K, V>(
       TelegramStorage<K, V>(bot, channel, serializer<K>(), serializer<V>())
   }
 
-  init {
-    Thread(::close).apply(getRuntime()::addShutdownHook)
-  }
+  private val shutdownHook = Thread(::close).apply(getRuntime()::addShutdownHook)
 
   private val keystoreSerializer = MapSerializer(keySerializer, serializer<String>())
 
@@ -169,6 +167,11 @@ class TelegramStorage<K, V>(
         if (interrupted) {
           currentThread().interrupt()
         }
+      }
+      try {
+        getRuntime().removeShutdownHook(shutdownHook)
+      } catch (_: IllegalStateException) {
+        // During JVM shutdown the hook registry is already closed to changes.
       }
     }
   }

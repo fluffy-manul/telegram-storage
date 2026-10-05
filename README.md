@@ -43,3 +43,17 @@ fun main() {
     val p = storage["Special Government Employee"]!!
 }
 ```
+
+## Local tests and retention benchmark
+
+`./gradlew test` runs loopback HTTP tests without Telegram credentials. Destructive live
+integration tests require `TELEGRAM_STORAGE_LIVE_TESTS=true`, `BOT_TOKEN`, and `CHANNEL_NAME`;
+use a dedicated disposable channel if opting in.
+
+`./gradlew benchmarkClosedStorageRetention -Pentries=10000 -Pcycles=5` opens and closes
+independent storage instances against a loopback fixture, requests GC, and reports how
+many closed instances and index entries remain reachable. Each close still uploads its
+index and waits for the channel description update. This measures object retention,
+not live Telegram throughput; GC requests are best effort.
+
+See [retention measurements and limitations](benchmarks/closed-storage-retention.md).

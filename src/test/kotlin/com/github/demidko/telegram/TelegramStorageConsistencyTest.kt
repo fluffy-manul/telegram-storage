@@ -82,6 +82,8 @@ internal class StatefulTelegram : AutoCloseable {
     server.start()
   }
 
+  val apiUrl get() = server.url("/").toString()
+
   fun open() = TelegramStorage(
     bot { token = "local"; apiUrl = server.url("/").toString() },
     ChatId.fromId(1), String.serializer(), String.serializer()
