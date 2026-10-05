@@ -6,6 +6,8 @@ import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 
 class TelegramStorageLifecycleTest {
@@ -20,6 +22,31 @@ class TelegramStorageLifecycleTest {
     assertFalse(Runtime.getRuntime().removeShutdownHook(hook), "close should have removed its registered hook")
     storage.close()
     assertEquals(1, api.uploads.get())
+  }
+
+  @Test
+  fun `duplicate close racing the hook callback does not duplicate publication`() = StatefulTelegram().use { api ->
+    val storage = api.open()
+    val hookField = storage.javaClass.getDeclaredField("shutdownHook").apply { isAccessible = true }
+    val hook = hookField.get(storage) as Thread
+    val gate = CountDownLatch(1)
+    api.descriptionGate = gate
+    val callers = Executors.newFixedThreadPool(2)
+    try {
+      val hookClose = callers.submit { hook.run() }
+      assertTrue(api.descriptionEntered.await(10, SECONDS))
+      // Existing semantics: a duplicate close returns even while the winning call is publishing.
+      callers.submit { storage.close() }.get(5, SECONDS)
+      assertFalse(hookClose.isDone)
+      gate.countDown()
+      hookClose.get(10, SECONDS)
+      assertEquals(1, api.uploads.get())
+      assertEquals(1, api.updates.get())
+      assertFalse(Runtime.getRuntime().removeShutdownHook(hook))
+    } finally {
+      gate.countDown()
+      callers.shutdownNow()
+    }
   }
 
   @Test

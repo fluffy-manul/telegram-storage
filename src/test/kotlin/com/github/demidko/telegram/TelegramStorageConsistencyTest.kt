@@ -165,6 +165,9 @@ class TelegramStorageConsistencyTest {
       assertEquals(0, api.updates.get())
       assertEquals("initial", api.description)
     } finally {
+      // Preserve the baseline's registered hook after failed close, then clean up this fixture.
+      val hook = storage.javaClass.getDeclaredField("shutdownHook").apply { isAccessible = true }
+      assertTrue(Runtime.getRuntime().removeShutdownHook(hook.get(storage) as Thread))
       // Baseline close leaves its executor alive after failure. Do not leak it in the test JVM.
       val field = storage.javaClass.getDeclaredField("atomicExecutor").apply { isAccessible = true }
       (field.get(storage) as ExecutorService).shutdownNow()

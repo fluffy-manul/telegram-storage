@@ -47,8 +47,9 @@ fun main() {
 ## Local tests and retention benchmark
 
 `./gradlew test` runs loopback HTTP tests without Telegram credentials. Destructive live
-integration tests require `TELEGRAM_STORAGE_LIVE_TESTS=true`, `BOT_TOKEN`, and `CHANNEL_NAME`;
-use a dedicated disposable channel if opting in.
+integration tests run when both `BOT_TOKEN` and `CHANNEL_NAME` are nonempty, preserving
+the existing credentialed CI configuration. Leave both unset for local-only testing;
+use a dedicated disposable channel when providing them.
 
 `./gradlew benchmarkClosedStorageRetention -Pentries=10000 -Pcycles=5` opens and closes
 independent storage instances against a loopback fixture, requests GC, and reports how

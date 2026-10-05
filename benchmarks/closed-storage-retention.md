@@ -60,11 +60,12 @@ GC-based pass/fail assertion in the unit tests.
 
 ## Regression coverage and limits
 
-Seventeen local tests pass: eight basic persistence/mutable-key tests, seven consistency
-and failure tests, and two lifecycle tests. They verify unconditional close publication,
+Eighteen local tests pass: eight basic persistence/mutable-key tests, seven consistency
+and failure tests, and three lifecycle tests. They verify unconditional close publication,
 last-close-wins behavior across instances, close/reopen, acknowledgement waiting, failed
 upload retry via `set`, existing failed-close behavior, and real child-JVM shutdown.
-Four destructive live integration tests are explicitly opt-in and were skipped.
+Four destructive live integration tests require nonempty `BOT_TOKEN` and `CHANNEL_NAME`
+and were skipped. Existing credentialed CI continues to enable them.
 
 Unclosed instances must remain reachable through their hooks until JVM shutdown. Failed
 close still has the upstream limitations: it sets the closed flag before persistence,
